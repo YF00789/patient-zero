@@ -55,8 +55,45 @@ public class Marker {
      * can have the same hash.
      * Example: a = "ACGTAC", b = "TTACGT", k = 4: the words of a are ACGT, CGTA, GTAC; only ACGT is in b, so the answer is 1.
      */
-    public static int sharedWords(String a, String b, int k) {
-        // TODO Mission 4
-        return -1;
+    public static int sharedWords(String a, String b, int k){
+        if (a.length()<k||b.length()<k) return 0;
+        long base=131;
+        long mod=1000000007;
+        long top=1;
+        for (int i=1; i<k; i++) top=(top*base)%mod;
+        Map<Long, List<Integer>> bHashes = new HashMap<>();
+        long h = 0;
+        for (int i=0; i<k; i++) h=(h*base+b.charAt(i))%mod;
+        bHashes.computeIfAbsent(h, x -> new ArrayList<>()).add(0);
+        for (int i=1; i<=b.length()-k; i++){
+            h = (h-(b.charAt(i-1)*top)%mod+mod)%mod;
+            h = (h*base+b.charAt(i+k-1))%mod;
+            bHashes.computeIfAbsent(h, x -> new ArrayList<>()).add(i);
+        }
+        int count=0;
+        h=0;
+        for (int i=0; i<k; i++) h=(h*base+a.charAt(i))%mod;
+        for (int i=0; i<=a.length()-k; i++){
+            if (i>0){
+                h = (h-(a.charAt(i-1)*top)%mod+mod)%mod;
+                h = (h*base+a.charAt(i+k-1))%mod;
+            }
+            if (bHashes.containsKey(h)){
+                for (int bIdx : bHashes.get(h)){
+                    boolean match=true;
+                    for (int j=0; j<k; j++){
+                        if (a.charAt(i+j)!=b.charAt(bIdx+j)){
+                            match=false;
+                            break;
+                        }
+                    }
+                    if (match){
+                        count++;
+                        break;
+                    }
+                }
+            }
+        }
+        return count;
     }
 }
