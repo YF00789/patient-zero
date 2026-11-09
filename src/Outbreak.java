@@ -16,9 +16,45 @@ public class Outbreak {
      * Do not forget to rebuild the answer (who exactly is tested), not only the cost: the picture needs it.
      * Main calls this twice: with all costs equal to 1 (the line "Tests needed") and with the real costs ("Cheapest testing").
      */
-    public static boolean[] cheapestTests(int n, int[][] nb, int[] cost) {
-        // TODO Mission 5a
-        return new boolean[n];
+    public static boolean[] cheapestTests(int n, int[][] nb, int[] cost){
+        int[] parent = new int[n];
+        int[] order = new int[n];
+        boolean[] vis = new boolean[n];
+        int head=0, tail=0;
+        order[tail++]=0;
+        vis[0]=true;
+        parent[0]=-1;
+        while (head<tail){
+            int u=order[head++];
+            for (int v : nb[u]){
+                if (!vis[v]){
+                    vis[v]=true;
+                    parent[v]=u;
+                    order[tail++]=v;
+                }
+            }
+        }
+        long[] take = new long[n];
+        long[] skip = new long[n];
+        for (int i=n-1; i>=0; i--){
+            int u=order[i];
+            take[u]=cost[u];
+            skip[u]=0;
+            for (int v : nb[u]){
+                if (v!=parent[u]){
+                    take[u] += Math.min(take[v], skip[v]);
+                    skip[u] += take[v];
+                }
+            }
+        }
+        boolean[] tested = new boolean[n];
+        tested[order[0]] = take[order[0]] <= skip[order[0]];
+        for (int i=1; i<n; i++){
+            int u=order[i];
+            int p=parent[u];
+            if (!tested[p]){tested[u]=true;} else{tested[u] = take[u] <= skip[u];}
+        }
+        return tested;
     }
 
     /**
@@ -26,8 +62,39 @@ public class Outbreak {
      * A path goes up from one person and down to another; for every person you need the two longest ways down.
      * Example: a line 0-1-2-3 has chain 3; a star with centre 0 and leaves 1, 2, 3 has chain 2.
      */
-    public static int longestChain(int n, int[][] nb) {
-        // TODO Mission 5b
-        return -1;
+    public static int longestChain(int n, int[][] nb){
+        int[] parent = new int[n];
+        int[] order = new int[n];
+        boolean[] vis = new boolean[n];
+        int head=0, tail=0;
+        order[tail++]=0;
+        vis[0]=true;
+        parent[0]=-1;
+        while (head<tail){
+            int u=order[head++];
+            for (int v : nb[u]){
+                if (!vis[v]){
+                    vis[v]=true;
+                    parent[v]=u;
+                    order[tail++]=v;
+                }
+            }
+        }
+        int[] top1 = new int[n];
+        int[] top2 = new int[n];
+        int maxChain=0;
+        for (int i=n-1; i>=0; i--){
+            int u=order[i];
+            maxChain = Math.max(maxChain, top1[u]+top2[u]);
+            if (parent[u]!=-1){
+                int p=parent[u];
+                int cand=top1[u]+1;
+                if (cand>top1[p]){
+                    top2[p]=top1[p];
+                    top1[p]=cand;
+                }else if (cand>top2[p]){top2[p]=cand;}
+            }
+        }
+        return maxChain;
     }
 }
